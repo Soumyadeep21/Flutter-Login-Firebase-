@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_login/auth.dart';
 
 class LoginPage extends StatefulWidget {
+  LoginPage({this.auth,this.onSignedIn});
+  final BaseAuth auth;
+  final VoidCallback onSignedIn;
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
-
   AnimationController animationController;
   Animation logoanimation;
-  FirebaseAuth firebaseAuth;
-  FirebaseUser firebaseUser;
   String _email,_password;
   FocusNode focusNode;
 
@@ -29,10 +29,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
     );
     logoanimation.addListener(()=>this.setState((){}));
     animationController.forward();
-    firebaseAuth = FirebaseAuth.instance;
-    firebaseAuth.currentUser().then((user){
-      firebaseUser = user;
-    });
     focusNode = FocusNode();
   }
   void _submit(){
@@ -43,17 +39,22 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
       _login();
     }
   }
-  void _login(){
-    firebaseAuth.signInWithEmailAndPassword(email: _email, password: _password).
-    then((user){
-      print("user uid : ${user.uid}");
-      Navigator.of(context).pushReplacementNamed("home");
+  void _login() async{
+    try{
+      String uid = await widget.auth.signIn(_email,_password);
+      print("Signed in : $uid");
+      widget.onSignedIn();
     }
-    ).catchError((e){print(e);});
+    catch(e){
+      final snackBar = SnackBar(content: Text("Error: $e"));
+      scaffoldKey.currentState.showSnackBar(snackBar);
+      print("Error: $e");
+    }
   }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       body: Stack(
         fit: StackFit.expand,
         children: <Widget>[

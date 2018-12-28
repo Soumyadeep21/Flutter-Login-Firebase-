@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_login/auth.dart';
 
 class RegistrationPage extends StatefulWidget {
+  RegistrationPage({this.auth});
+  final BaseAuth auth;
   @override
   _RegistrationPageState createState() => _RegistrationPageState();
 }
@@ -10,7 +12,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final formKey = GlobalKey<FormState>();
   String _name,_email,_password;
   FocusNode f1,f2;
-  FirebaseAuth firebaseAuth;
 
   @override
   void initState() {
@@ -18,7 +19,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
     super.initState();
     f1 = FocusNode();
     f2 = FocusNode();
-    firebaseAuth = FirebaseAuth.instance;
   }
 
   void _submit(){
@@ -29,13 +29,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
       _register();
     }
   }
-  void _register(){
-    firebaseAuth.createUserWithEmailAndPassword(email: _email, password: _password).
-    then((user){
-      print("Account Created");
-      firebaseAuth.signOut().whenComplete((){print("Signed Out");});
+  void _register() async{
+    try {
+      String uid = await widget.auth.createUser(_email, _password);
+      print("uid: $uid");
+      widget.auth.signOut();
       Navigator.of(context).pushReplacementNamed("login");
-    });
+    }
+    catch(e){
+      print("Error: $e");
+    }
   }
   @override
   Widget build(BuildContext context) {
