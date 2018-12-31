@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login/auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'registration_page.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({this.auth,this.onSignedIn});
@@ -33,6 +35,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
     animationController.forward();
     focusNode = FocusNode();
   }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    animationController.dispose();
+    super.dispose();
+
+  }
   void _submit(){
     final form = formKey.currentState;
     if(form.validate()){
@@ -46,8 +56,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
       String uid = await widget.auth.signIn(_email,_password);
       print("Signed in : $uid");
       await widget.auth.isEmailVerified().then((isVerified) async{
-        if (isVerified)
-          widget.onSignedIn();
+        if (isVerified){
+          print("Verified");
+          widget.onSignedIn();}
         else {
           final snackBar = SnackBar(
             content: Text("Email Not Verified!"),
@@ -101,7 +112,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
           Image.asset(
             "images/login.jpg",
             fit: BoxFit.cover,
-            color: Colors.black45,
+            color: Colors.black87,
             colorBlendMode: BlendMode.darken,
           ),
           Container(
@@ -181,8 +192,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                 Padding(padding: EdgeInsets.only(top: 20.0)),
                 FlatButton(
                   onPressed: () {
-                    //Navigator.of(context).pushNamed("registration");
-                    Navigator.of(context).pushReplacementNamed("registration");
+                   Navigator.of(context).push(PageNavigate(auth: widget.auth));
                   },
                   child: Text(
                     "New User? Sign Up!",
@@ -260,4 +270,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
       ),
     );
   }
+}
+
+class PageNavigate extends CupertinoPageRoute{
+  final BaseAuth auth;
+  PageNavigate({this.auth})
+  :super(builder: (BuildContext context) => RegistrationPage(auth: auth,));
 }

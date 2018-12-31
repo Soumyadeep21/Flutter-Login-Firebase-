@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login/auth.dart';
+import 'root_page.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class RegistrationPage extends StatefulWidget {
   RegistrationPage({this.auth});
@@ -37,10 +39,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
       await widget.auth.sendEmailVerification()
           .then((user) async{
         widget.auth.signOut();
-        final snackBar = SnackBar(content: Text("Verification Email Sent!"));
-        scaffoldKey.currentState.showSnackBar(snackBar);
-        Future.delayed(Duration(seconds: 2));
-        Navigator.of(context).pushReplacementNamed("login");
+        Fluttertoast.showToast(
+            msg: "Verification Email Sent!Verify to Login",
+            gravity: ToastGravity.BOTTOM,
+            toastLength: Toast.LENGTH_LONG
+        );
+        Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (BuildContext context)=> RootPage(auth: widget.auth)),
+                (Route<dynamic> route) => false
+        );
       });
     }
     catch(e){
@@ -57,7 +64,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           Image.asset(
             "images/registration.jpg",
             fit: BoxFit.cover,
-            color: Colors.black45,
+            color: Colors.black87,
             colorBlendMode: BlendMode.darken,
           ),
           Container(
@@ -156,7 +163,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 Padding(padding: EdgeInsets.only(top: 30.0)),
                 FlatButton(
                   onPressed: () {
-                    Navigator.of(context).pushReplacementNamed("login");
+                    Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (BuildContext context)=> RootPage(auth: widget.auth)),
+                            (Route<dynamic> route) => false
+                    );
                   },
                   child: Text(
                     "Already Registered? Log In",
