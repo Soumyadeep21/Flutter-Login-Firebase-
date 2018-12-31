@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login/auth.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({this.auth,this.onSignedIn});
@@ -12,11 +13,12 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
   AnimationController animationController;
   Animation logoanimation;
-  String _email,_password;
+  String _email,_password,_emailpassword;
   FocusNode focusNode;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final formKey = GlobalKey<FormState>();
+  final formKey1 = GlobalKey<FormState>();
   void initState(){
     super.initState();
     animationController = AnimationController(
@@ -43,12 +45,50 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
     try{
       String uid = await widget.auth.signIn(_email,_password);
       print("Signed in : $uid");
-      widget.onSignedIn();
+      await widget.auth.isEmailVerified().then((isVerified) async{
+        if (isVerified)
+          widget.onSignedIn();
+        else {
+          final snackBar = SnackBar(
+            content: Text("Email Not Verified!"),
+            duration: Duration(seconds: 1),
+            action: SnackBarAction(
+                label: "Send Again",
+                onPressed: () async {
+                  await widget.auth.sendEmailVerification();
+                }
+            ),
+          );
+          scaffoldKey.currentState.showSnackBar(snackBar);
+          await Future.delayed(Duration(milliseconds: 1001));
+          await widget.auth.signOut();
+        }
+      });
     }
     catch(e){
-      final snackBar = SnackBar(content: Text("Error: $e"));
+      final snackBar = SnackBar(content: Text("Error in Signing in!"));
       scaffoldKey.currentState.showSnackBar(snackBar);
       print("Error: $e");
+    }
+  }
+
+  void _passwordReset() async{
+    final form = formKey1.currentState;
+    if(form.validate()){
+      form.save();
+      try {
+        await widget.auth.resetPassword(_emailpassword);
+        Navigator.of(context).pop();
+        final snackBar = SnackBar(content: Text("Password Reset Email Sent"));
+        scaffoldKey.currentState.showSnackBar(snackBar);
+      }
+      catch(e){
+        Fluttertoast.showToast(
+            msg: "Invalid Input!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+        );
+      }
     }
   }
   @override
@@ -84,9 +124,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                         TextFormField(
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              hintText: "Email",
-                              hintStyle: TextStyle(color: Colors.blueAccent),
-                              icon: Icon(Icons.mail,color: Colors.red,)
+                              hintText: "Enter Email",
+                              labelText: "Email",
+                              labelStyle: TextStyle(color: Colors.yellowAccent),
+                              hintStyle: TextStyle(color: Colors.blueAccent.withOpacity(.45)),
+                              icon: Icon(Icons.mail,color: Colors.red,),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
                             ),
                           style: TextStyle(color: Colors.blue),
                           validator: (val)=> !val.contains('@')?"Invalid Email":null,
@@ -96,13 +139,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                         new Padding(padding: EdgeInsets.only(top: 30.0)),
                         TextFormField(
                           decoration: InputDecoration(
-                              hintText: "Password",
-                              hintStyle: TextStyle(color: Colors.blueAccent),
-                              icon: Icon(Icons.lock,color: Colors.red,)
+                              hintText: "Enter Password",
+                              labelText: "Password",
+                              labelStyle: TextStyle(color: Colors.yellowAccent),
+                              hintStyle: TextStyle(color: Colors.blueAccent.withOpacity(.45)),
+                              icon: Icon(Icons.lock,color: Colors.red,),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
                           ),
                           obscureText: true,
                           style: TextStyle(color: Colors.blue),
-                          validator: (val)=> val.length<6?"Password too short:null":null,
+                          validator: (val)=> val.length<6?"Password too short":null,
                           onSaved: (val)=> _password=val,
                           focusNode: focusNode,
                         ),
@@ -114,7 +160,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                   height: 45.0,
                   width: 200.0,
                   decoration: BoxDecoration(
-                      color: Colors.pink[700],
+                      color: Colors.deepPurple[400].withOpacity(.6),
                       borderRadius: BorderRadius.circular(30.0)
                   ),
                   child: FlatButton(
@@ -122,7 +168,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                     child: Text(
                       "LOGIN",
                       style: TextStyle(
-                        color: Colors.yellowAccent,
+                        color: Colors.white,
                         fontSize: 20.0,
                         fontFamily: "Karla",
                         fontWeight: FontWeight.bold,
@@ -139,15 +185,73 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin{
                     Navigator.of(context).pushReplacementNamed("registration");
                   },
                   child: Text(
-                    "New User? Sign Up",
+                    "New User? Sign Up!",
                     style: TextStyle(
-                        color: Colors.yellow,
+                        color: Colors.orangeAccent,
                         fontWeight: FontWeight.bold,
                         fontStyle: FontStyle.italic,
                         fontFamily: "Karla",
                         fontSize: 24.0
                     ),
                   ),
+                ),
+                Padding(padding: EdgeInsets.only(top: 20.0)),
+                FlatButton(
+                    onPressed: (){
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context){
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                              title: Text("Reset Password"),
+                              content: Form(
+                                key: formKey1,
+                                child: TextFormField(
+                                  onSaved: (val)=>_emailpassword = val,
+                                  validator: (val)=> !val.contains('@')?"Invalid Email":null,
+                                  keyboardType: TextInputType.emailAddress,
+                                  style: TextStyle(color: Colors.blue),
+                                  decoration: InputDecoration(
+                                    hintText: "Enter Email",
+                                    labelText: "Email",
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+                                  ),
+                                  autofocus: true,
+                                ),
+                              ),
+                              actions: <Widget>[
+                                FlatButton(
+                                    onPressed: ()=>Navigator.of(context).pop(),
+                                    child: Text(
+                                        "Cancel",
+                                        style: TextStyle(color: Colors.black),
+                                    )
+                                ),
+                                RaisedButton(
+                                  onPressed: (){
+                                    _passwordReset();
+                                  },
+                                  child: Text(
+                                    "Submit",
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                  color: Colors.deepOrange,
+                                )
+                              ],
+                            );
+                          }
+                      );
+                    },
+                    child: Text(
+                        "Forgot Password?",
+                        style: TextStyle(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FontStyle.italic,
+                            fontFamily: "Karla",
+                            fontSize: 20.0
+                        ),
+                    )
                 )
               ],
             ),

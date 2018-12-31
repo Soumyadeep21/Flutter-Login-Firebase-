@@ -10,6 +10,7 @@ class RegistrationPage extends StatefulWidget {
 
 class _RegistrationPageState extends State<RegistrationPage> {
   final formKey = GlobalKey<FormState>();
+  final scaffoldKey = GlobalKey<ScaffoldState>();
   String _name,_email,_password;
   FocusNode f1,f2;
 
@@ -33,8 +34,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
     try {
       String uid = await widget.auth.createUser(_email, _password);
       print("uid: $uid");
-      widget.auth.signOut();
-      Navigator.of(context).pushReplacementNamed("login");
+      await widget.auth.sendEmailVerification()
+          .then((user) async{
+        widget.auth.signOut();
+        final snackBar = SnackBar(content: Text("Verification Email Sent!"));
+        scaffoldKey.currentState.showSnackBar(snackBar);
+        Future.delayed(Duration(seconds: 2));
+        Navigator.of(context).pushReplacementNamed("login");
+      });
     }
     catch(e){
       print("Error: $e");
@@ -43,6 +50,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       body: Stack(
         fit: StackFit.expand,
         children: <Widget>[
@@ -62,7 +70,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     style: TextStyle(
                       fontSize: 40.0,
                       fontFamily: "Pacifico",
-                      color: Colors.yellowAccent
+                      color: Colors.cyanAccent[400]
                     ),
                   ),
                 ),
@@ -73,9 +81,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       children: <Widget>[
                         TextFormField(
                           decoration: InputDecoration(
-                              hintText: "Name",
-                              hintStyle: TextStyle(color: Colors.blueAccent),
-                              icon: Icon(Icons.person,color: Colors.red,)
+                              hintText: "Enter Your Name",
+                              labelText: "Name",
+                              labelStyle: TextStyle(color: Colors.yellowAccent),
+                              hintStyle: TextStyle(color: Colors.blueAccent.withOpacity(.45)),
+                              icon: Icon(Icons.person,color: Colors.red,),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
                           ),
                           style: TextStyle(color: Colors.blue),
                           validator: (val)=> val.length<1?"Invalid Name":null,
@@ -87,9 +98,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           keyboardType: TextInputType.emailAddress,
                           focusNode: f1,
                           decoration: InputDecoration(
-                              hintText: "Email",
-                              hintStyle: TextStyle(color: Colors.blueAccent),
-                              icon: Icon(Icons.mail,color: Colors.red,)
+                              hintText: "Enter Your Email",
+                              labelText: "Email",
+                              labelStyle: TextStyle(color: Colors.yellowAccent),
+                              hintStyle: TextStyle(color: Colors.blueAccent.withOpacity(.45)),
+                              icon: Icon(Icons.mail,color: Colors.red,),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
                           ),
                           style: TextStyle(color: Colors.blue),
                           validator: (val)=> !val.contains('@')?"Invalid Email":null,
@@ -101,9 +115,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           keyboardType: TextInputType.emailAddress,
                           focusNode: f2,
                           decoration: InputDecoration(
-                              hintText: "Password",
-                              hintStyle: TextStyle(color: Colors.blueAccent),
-                              icon: Icon(Icons.lock,color: Colors.red,)
+                              hintText: "Enter Password",
+                              labelText: "Password",
+                              labelStyle: TextStyle(color: Colors.yellowAccent),
+                              hintStyle: TextStyle(color: Colors.blueAccent.withOpacity(.45)),
+                              icon: Icon(Icons.lock,color: Colors.red,),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
                           ),
                           style: TextStyle(color: Colors.blue),
                           validator: (val)=> val.length<6?"Pasword too short":null,
@@ -118,7 +135,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   height: 45.0,
                   width: 200.0,
                   decoration: BoxDecoration(
-                      color: Colors.pink[700],
+                      color: Colors.deepPurple[400].withOpacity(.6),
                       borderRadius: BorderRadius.circular(30.0)
                   ),
                   child: FlatButton(
@@ -126,7 +143,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     child: Text(
                       "REGISTER",
                       style: TextStyle(
-                        color: Colors.yellowAccent,
+                        color: Colors.white,
                         fontSize: 20.0,
                         fontFamily: "Karla",
                         fontWeight: FontWeight.bold,
@@ -136,7 +153,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     splashColor: Colors.blue[800],
                   ),
                 ),
-                Padding(padding: EdgeInsets.only(top: 20.0)),
+                Padding(padding: EdgeInsets.only(top: 30.0)),
                 FlatButton(
                   onPressed: () {
                     Navigator.of(context).pushReplacementNamed("login");
@@ -144,7 +161,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   child: Text(
                     "Already Registered? Log In",
                     style: TextStyle(
-                        color: Colors.yellow,
+                        color: Colors.deepOrange,
                         fontWeight: FontWeight.bold,
                         fontStyle: FontStyle.italic,
                         fontFamily: "Karla",

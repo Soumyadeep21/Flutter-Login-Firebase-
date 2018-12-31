@@ -28,7 +28,6 @@ class MyAppState extends State<MyApp> {
         "registration" : (BuildContext context) => new RegistrationPage(auth: widget.auth,),
         "home" : (BuildContext context) => new HomePage(auth: widget.auth,),
       },
-      //initialRoute: "login",
       home: RootPage(auth: widget.auth,),
     );
   }
