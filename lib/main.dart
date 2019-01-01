@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login/auth.dart';
-import 'package:flutter_login/pages/root_page.dart';
+import 'package:flutter_login/pages/splash_screen.dart';
 import 'auth.dart';
 
 void main(){
@@ -22,9 +22,12 @@ class MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Login App",
-      home: RootPage(auth: widget.auth,),
+      home: SplashScreen(auth: widget.auth,),
     );
   }
 }
+
+
+
 
 
